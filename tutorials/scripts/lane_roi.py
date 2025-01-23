@@ -1,21 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-import rospy
-import cv2
-import numpy as np
+import rospy, cv2, numpy as np
 from sensor_msgs.msg import CompressedImage
 
 class IMGParser:
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.callback)
-        rospy.loginfo("Subscriber initialized")
+        rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.callback)
 
         # Dynamic configuration through ROS parameters (could also be set via launch files)
         self.crop_pts = rospy.get_param('~crop_pts', [
-            [320 / 2 - 20, 240 / 2 + 10],
-            [320 / 2 + 20, 240 / 2 + 10],
-            [320, 240],
-            [0, 240]
+            [0, 400],
+            [290, 250],
+            [350, 250],
+            [640, 400]
         ])
         self.crop_pts = np.array([self.crop_pts], dtype=np.int32)
 
@@ -54,10 +52,7 @@ class IMGParser:
 
 def main():
     rospy.init_node('image_parser', anonymous=True)
-    rospy.loginfo("Node initialized")
-
-    image_parser = IMGParser()
-
+    IMGParser()
     try:
         rospy.spin()
     except KeyboardInterrupt:

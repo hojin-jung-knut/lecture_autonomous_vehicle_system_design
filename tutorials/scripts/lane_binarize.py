@@ -1,14 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-import rospy
-import cv2
-import numpy as np
+import rospy, cv2, numpy as np
 from sensor_msgs.msg import CompressedImage
 
 class IMGParser:
-
     def __init__(self):
-        self.image_sub = rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.callback)
+        rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.callback)
         self.img_bgr = None
 
     def callback(self, msg):
@@ -23,8 +21,8 @@ class IMGParser:
             img_hsv = cv2.cvtColor(self.img_bgr, cv2.COLOR_BGR2HSV)
 
             # Tune these values based on your specific scenario
-            lower_wlane = np.array([0, 0, 200])
-            upper_wlane = np.array([180, 30, 255])
+            lower_wlane = np.array([0, 0, 185])
+            upper_wlane = np.array([30, 60, 255])
 
             img_wlane = cv2.inRange(img_hsv, lower_wlane, upper_wlane)
             img_wlane = cv2.cvtColor(img_wlane, cv2.COLOR_GRAY2BGR)
@@ -36,8 +34,7 @@ class IMGParser:
 
 if __name__ == '__main__':
     rospy.init_node('image_parser', anonymous=True)
-    image_parser = IMGParser()
-
+    IMGParser()
     try:
         rospy.spin()
     except KeyboardInterrupt:
