@@ -16,18 +16,18 @@ Front Overhang(m): 0.845
 Rear Overhang(m): 0.7   
 
 #### Simulator Network
-1. Ego Ctrl Cmd    
+- Ego Ctrl Cmd    
   Network Settings > Ego-0 > Cmd Control   
   /Ctrl_cmd 제어시, longi type 1번 (accel, brake) 제어를 사용해야 함   
-2. Event Cmd Srv   
+- Event Cmd Srv   
   차량 기어 변경   
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
-3. CollisionData   
+- CollisionData   
   충돌 여부 확인   
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
-4. Competition Vehicle Status   
+- Competition Vehicle Status   
   주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공   
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
 
-###Term Project2
+### Term Project2
 To be determined
