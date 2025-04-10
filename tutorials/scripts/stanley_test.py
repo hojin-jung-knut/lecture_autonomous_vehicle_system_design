@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy, rospkg, csv, os, time, numpy as np
+import rospy, numpy as np
 from math import cos, sin, sqrt, atan2, pi
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry, Path
@@ -9,7 +9,7 @@ from morai_msgs.msg import CtrlCmd, EgoVehicleStatus
 from tf.transformations import euler_from_quaternion
 
 class Stanley:
-    def __init__(self, pkg_name, path_name):
+    def __init__(self):
         rospy.init_node('stanley', anonymous=True)
         rospy.Subscriber("/local_path", Path, self.path_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
@@ -24,17 +24,6 @@ class Stanley:
         self.vehicle_length = rospy.get_param('~vehicle_length', 3.0)
         self.k = rospy.get_param('~stanley_gain', 0.8)
         self.v_t = rospy.get_param('~velocity_gain', 1.0)
-        
-        self.log_start_time = time.time()
-        self.last_log_time = 0.0
-        
-        rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path(pkg_name)
-        self.log_file_path = os.path.join(pkg_path, f"{path_name}.csv")
-
-        self.csv_file = open(self.log_file_path, mode='w', newline='')
-        self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['time', 'pos_x', 'pos_xd', 'pos_y', 'pos_yd', 'steer'])
 
     def main(self):
         rate = rospy.Rate(5) # 5Hz
@@ -121,26 +110,11 @@ class Stanley:
         odom_quaternion = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y,
                            msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, self.vehicle_yaw = euler_from_quaternion(odom_quaternion)
-
-        self.current_position.x = msg.pose.pose.position.x
-        self.current_position.y = msg.pose.pose.position.y
-
-        if time.time() - self.last_log_time > 1:
-            rospy.loginfo(f"x: {self.current_position.x:.2f}, y: {self.current_position.y:.2f}")
-            log = np.around([time.time() - self.log_start_time, self.current_position.x,
-                             self.current_position.y, self.ctrl_cmd_msg.steering], 4)
-            self.csv_writer.writerow(log)
-            self.last_log_time = time.time()
-
-    def stop(self):
-        rospy.loginfo("Logging finished")
-        self.csv_file.close()
+        self.current_position = msg.pose.pose.position
 
 if __name__ == '__main__':
     try:
-        stly = Stanley("tutorials", "log_stanley")
-        stly.main()
+        stanley = Stanley()
+        stanley.main()
     except rospy.ROSInterruptException:
         pass
-    finally:
-        stly.stop()
