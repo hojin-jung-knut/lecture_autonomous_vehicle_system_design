@@ -1,9 +1,10 @@
 <launch>
-    <node pkg="tutorials" type="mgeo_pub.py" name="mgeo_pub"  />
     <node pkg="tutorials" type="gpsimu_parser.py" name="gpsimu_parser" />
     <node pkg="tutorials" type="local_path_pub.py" name="local_path_pub" />
     <node pkg="tutorials" type="tf_pub.py" name="tf"  />
     <node pkg="tutorials" type="path_pub.py" name="path_pub"  />
-
+    <node pkg="tutorials" type="data_logger.py" name="data_logger"  />
+    <node pkg="tutorials" type="pure_pursuit_pid_test.py" name="pure_pursuit"  />
+    
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find tutorials)/rviz/kcity.rviz" />
 </launch>
