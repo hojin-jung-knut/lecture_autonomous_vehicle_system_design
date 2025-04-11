@@ -38,7 +38,7 @@ class PurePursuit:
         self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=1)
 
         self.is_path = self.is_odom = self.is_status = False
-        self.target_vel = 40.0 # Target velocity in km/h
+        self.target_vel = 40.0  # in m/s
         self.current_vel = 0.0
         self.forward_point = self.current_position = Point()
         self.is_look_forward_point = False
@@ -55,7 +55,7 @@ class PurePursuit:
             if self.is_path and self.is_odom and self.is_status:
                 self.pure_pursuit_control()
             else:
-                self.log_missing_data()
+                self.missing_topics()
 
             self.reset_flags()
             rate.sleep()
@@ -115,7 +115,7 @@ class PurePursuit:
     def reset_flags(self):
         self.is_path = self.is_odom = self.is_status = False
 
-    def log_missing_data(self):
+    def missing_topics(self):
         if not self.is_path:
             rospy.logwarn("Missing '/local_path' topic")
         if not self.is_odom:
