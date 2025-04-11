@@ -35,8 +35,6 @@ class Stanley:
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         rospy.Subscriber("/Ego_topic", EgoVehicleStatus, self.status_callback)
         self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=1)
-        self.ctrl_cmd_msg = CtrlCmd()
-        self.ctrl_cmd_msg.longlCmdType = 1 # Acceleration control type
 
         self.is_path = self.is_odom = self.is_status = False
         self.current_position = Point()
@@ -54,7 +52,7 @@ class Stanley:
             if self.is_path and self.is_odom and self.is_status:
                 self.stanley_control()
             else:
-                self.log_missing_data()
+                self.missing_topics()
 
             self.reset_flags()
             rate.sleep()
@@ -98,6 +96,9 @@ class Stanley:
             rospy.logwarn("Forward point not found")
 
     def publish_control_commands(self, temp, temp_global, vehicle_position):
+        self.ctrl_cmd_msg = CtrlCmd()
+        self.ctrl_cmd_msg.longlCmdType = 1 # Acceleration control type
+        
         heading_error = atan2(temp[1][1] - temp[0][1], temp[1][0] - temp[0][0])
         cte = sin(self.vehicle_yaw) * (temp_global[0] - vehicle_position.x) - cos(self.vehicle_yaw) * (temp_global[1] - vehicle_position.y)
         crosstrack_error = -atan2(self.k * cte, self.current_vel + self.v_t)
@@ -111,16 +112,16 @@ class Stanley:
         rospy.loginfo(f"Steering (deg): {self.ctrl_cmd_msg.steering * 180 / pi:.2f}, Accel: {min(100,self.ctrl_cmd_msg.accel):.2f}, Brake: {min(100,self.ctrl_cmd_msg.brake):.2f}")
         self.ctrl_cmd_pub.publish(self.ctrl_cmd_msg)
 
-    def log_missing_topics(self):
+    def missing_topics(self):
         if not self.is_path:
-            rospy.loginfo("Missing '/local_path' topic")
+            rospy.logwarn("Missing '/local_path' topic")
         if not self.is_odom:
-            rospy.loginfo("Missing '/odom' topic")
+            rospy.logwarn("Missing '/odom' topic")
         if not self.is_status:
-            rospy.loginfo("Missing '/Ego_topic' topic")
+            rospy.logwarn("Missing '/Ego_topic' topic")
 
-    def reset_topic_flags(self):
-        self.is_path = self.is_odom = self.is_status = False
+    def reset_flags(self):
+        self.is_path = self.is_odom = self.is_status = False  
 
     def status_callback(self, msg):
         self.is_status = True
@@ -140,6 +141,5 @@ class Stanley:
 if __name__ == '__main__':
     try:
         stanley = Stanley()
-        stanley.main()
     except rospy.ROSInterruptException:
         pass
