@@ -34,7 +34,7 @@ class Stanley:
         rospy.Subscriber("/local_path", Path, self.path_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         rospy.Subscriber("/Ego_topic", EgoVehicleStatus, self.status_callback)
-        self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=1)
+        self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=1)  # check topic in MORAI Sim (/ctrl_cmd_0)
 
         self.is_path = self.is_odom = self.is_status = False
         self.current_position = Point()
