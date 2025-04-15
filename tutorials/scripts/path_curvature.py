@@ -71,7 +71,7 @@ class Curvature:
             x = global_path.poses[self.i + box].pose.position.x
             y = global_path.poses[self.i + box].pose.position.y
             x_list.append([-2*x, -2*y, 1])
-            y_list.append(-x**2 - y**2)
+            y_list.append(-x**2-y**2)
 
         x_matrix = np.array(x_list)
         y_matrix = np.array(y_list)
