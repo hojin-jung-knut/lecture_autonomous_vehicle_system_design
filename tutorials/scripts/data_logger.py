@@ -87,7 +87,7 @@ class DataLogger:
 
 if __name__ == '__main__':
     try:
-        data_logger = DataLogger("tutorials", "log")
+        data_logger = DataLogger("tutorials", "term_project_studentnumber")
         data_logger.main()
     except rospy.ROSInterruptException:
         pass
