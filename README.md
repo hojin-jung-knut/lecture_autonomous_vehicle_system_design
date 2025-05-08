@@ -49,5 +49,5 @@ Model: 2023_Hyundai_Ioniq5
 ![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)
 교차로 신호 준수
 ![image](https://github.com/user-attachments/assets/efefa6ec-1c29-44d1-b35b-6a3f2366c955)
-1, 3, 5번 신호등의 경우 초록불로 고정
-전체 주행 시간에서 신호 대기시간을 빼는 등의 조치 없음
+1, 3, 5번 신호등의 경우 초록불로 고정   
+전체 주행 시간에서 신호 대기시간을 빼는 등의 조치 없음   
