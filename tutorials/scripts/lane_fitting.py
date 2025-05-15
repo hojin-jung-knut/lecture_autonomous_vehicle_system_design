@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy
-import cv2
-import numpy as np
-import os, rospkg
-import json
-
+import rospy, cv2, os, rospkg, json, random, numpy as np
 from sensor_msgs.msg import CompressedImage
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
-
 from math import sin, cos, tan
 from sklearn import linear_model
-import random
 
 # ignore warning
 from warnings import simplefilter
@@ -90,13 +83,11 @@ def rotationMtx(yaw, pitch, roll):
     return R
 
 def traslationMtx(x, y, z):
-     
     M = np.array([[1,         0,              0,               x],
                   [0,         1,              0,               y],
                   [0,         0,              1,               z],
                   [0,         0,              0,               1],
                   ])
-    
     return M
 
 def project2img_mtx(params_cam):
@@ -111,7 +102,6 @@ def project2img_mtx(params_cam):
     if params_cam["ENGINE"]=='UNITY':
         fc_x = params_cam["HEIGHT"]/(2*tan(np.deg2rad(params_cam["FOV"]/2)))
         fc_y = params_cam["HEIGHT"]/(2*tan(np.deg2rad(params_cam["FOV"]/2)))
-
     else:
         fc_x = params_cam["WIDTH"]/(2*tan(np.deg2rad(params_cam["FOV"]/2)))
         fc_y = params_cam["WIDTH"]/(2*tan(np.deg2rad(params_cam["FOV"]/2)))
@@ -123,9 +113,7 @@ def project2img_mtx(params_cam):
     #transformation matrix from 3D to 2D
     R_f = np.array([[fc_x,  0,      cx],
                     [0,     fc_y,   cy]])
-
     return R_f
-
 
 
 class BEVTransform:
@@ -207,7 +195,6 @@ class BEVTransform:
             xyz_g = np.zeros((4, 10))
         return xyz_g
 
-
     def project_lane2img(self, x_pred, y_pred_l, y_pred_r):
         xyz_l_g = np.concatenate([x_pred.reshape([1,-1]),
                                   y_pred_l.reshape([1,-1]),
@@ -241,7 +228,6 @@ class BEVTransform:
         return xyi
 
 class CURVEFit:
-    
     def __init__(
         self,
         order=3,
@@ -281,14 +267,11 @@ class CURVEFit:
         self.path_pub = rospy.Publisher('/lane_path', Path, queue_size=30)
 
     def _init_model(self):
-        
         X = np.stack([np.arange(0, 2, 0.02)**i for i in reversed(range(1, self.order+1))]).T
         y_l = 0.5*self.lane_width*np.ones_like(np.arange(0, 2, 0.02))
         y_r = -0.5*self.lane_width*np.ones_like(np.arange(0, 2, 0.02))
-
         self.ransac_left.fit(X, y_l)
         self.ransac_right.fit(X, y_r)
-
 
     def preprocess_pts(self, lane_pts):
         idx_list = []
@@ -344,16 +327,15 @@ class CURVEFit:
             y_pred_r = y_pred_l - self.lane_width
         
         # overlap the lane
-
         if len(y_pred_l) == len(y_pred_r):
             if np.mean(y_pred_l + y_pred_r):
-                if y_pred_r[x_pred==3.0]>0:
+                idx = np.argmin(np.abs(x_pred - 3.0))
+                if y_pred_r[idx] > 0:
                     y_pred_r = y_pred_l - self.lane_width
-                elif y_pred_l[x_pred==3.0]<0:
+                elif y_pred_l[idx] < 0:
                     y_pred_l = y_pred_r + self.lane_width
             else:
                 pass
-        
         else:
             pass
 
@@ -362,7 +344,6 @@ class CURVEFit:
     def update_lane_width(self, y_pred_l, y_pred_r):
         temp = np.clip(np.max(y_pred_l-y_pred_r), 3.5, 5)
         self.lane_width = 13 if temp < 10 else temp
-   
     
     def write_path_msg(self, x_pred, y_pred_l, y_pred_r, frame_id='/map'):
         self.lane_path = Path()
@@ -382,7 +363,6 @@ class CURVEFit:
     def pub_path_msg(self):
         self.path_pub.publish(self.lane_path)
 
-
 def draw_lane_img(img, leftx, lefty, rightx, righty):
     '''
     place the lidar points into numpy arrays in order to make intensity map
@@ -400,7 +380,6 @@ def draw_lane_img(img, leftx, lefty, rightx, righty):
         point_np = cv2.circle(point_np, ctr, 2, (0,0,255),-1)
 
     return point_np
-
 
 if __name__ == '__main__':
     rp = rospkg.RosPack()
@@ -436,10 +415,10 @@ if __name__ == '__main__':
             cv2.imshow("img_warp", img_warp)
             cv2.imshow("origin_img", image_parser.img_bgr)
             cv2.waitKey(1)
-            print(f"Caemra sensor was connected !")
+            print(f"Camera sensor connected!")
 
         else:
-            print("[1] can't subscribe '/image_jpeg/compressed' topic... \n    please check your Camera sensor connection")
+            print("Unable to subscribe '/image_jpeg/compressed' topic... \n    please check your camera sensor connection")
                 
         image_parser.img_bgr = None
         rate.sleep()
