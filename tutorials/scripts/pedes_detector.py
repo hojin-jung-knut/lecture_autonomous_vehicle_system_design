@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
- 
+#-*- coding:utf-8 -*-
+
 import rospy
 import cv2
 import numpy as np
-
 from sensor_msgs.msg import CompressedImage
-
 
 def non_maximum_supression(bboxes, threshold=0.3):
     
