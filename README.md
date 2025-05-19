@@ -1,4 +1,4 @@
-### Term Project 1
+### Term Project I
 Map: R_KR_PG_C-track_outdoor(tutorials/path/C-track_outdoor.txt)   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
@@ -38,7 +38,7 @@ Rear Overhang(m): 0.7
   주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공   
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
 
-### Term Project2
+### Term Project II
 Map: R_KR_PR_Sangam_NoBuildings   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
@@ -52,4 +52,7 @@ Model: 2023_Hyundai_Ioniq5
 1, 3, 5번 신호등의 경우 초록불로 고정   
 전체 주행 시간에서 신호 대기시간을 빼는 등의 조치 없음   
 - 차선변경   
-![image](https://github.com/user-attachments/assets/2845996a-528b-4583-b887-e1df590189ae)
+![image](https://github.com/user-attachments/assets/2845996a-528b-4583-b887-e1df590189ae)   
+제공된 미션 경로에 차선 변경이 필요한 부분이 있음
+미션 경로를 최대한 벗어나지 않도록 끊긴 경로에 대한 최적화된 경로 계획을 하여 자율주행제어 완성
+- 정적 장애물
