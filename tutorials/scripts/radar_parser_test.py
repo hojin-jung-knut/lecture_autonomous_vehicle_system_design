@@ -1,48 +1,57 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
- 
-import rospy, std_msgs.msg
+
+import rospy, numpy as np
 from sensor_msgs.msg import PointCloud
-from geometry_msgs.msg import Point32
+from std_msgs.msg import Header, Float32MultiArray
+from math import atan2, sqrt, pi
 
 class RADARParser:
     def __init__(self):
         rospy.init_node('RADAR_parser', anonymous=True)
         self.radar_sub = rospy.Subscriber("/radarPointCloud", PointCloud, self.callback)
         self.radar_pub = rospy.Publisher('/sensor_radar', PointCloud, queue_size=1)
-        # Initialization
-        self.header = std_msgs.msg.Header()
-        self.header.stamp = rospy.Time.now()
-        self.header.frame_id = '/sensor_radar'
-        self.radar_msg = PointCloud()
-        self.radar_points = [Point32() for _ in range(180)]
-        self.is_radar = False
-        rate = rospy.Rate(5)
-        while not rospy.is_shutdown():
-            if self.is_radar :
-                self.radar_msg.header = self.header
-                self.radar_msg.points = self.radar_points
-                self.radar_pub.publish(self.radar_msg)
-                rospy.loginfo("Radar message published to '/sensor_radar'")
-                rospy.loginfo("----------------------[ radar_msg ]----------------------")
-                rospy.loginfo(self.radar_msg.points)
-            else :
-                rospy.logwarn("Unable to subscribe to '/radarPointCloud'. Check RADAR sensor connection.")
-            self.is_radar = False
-            rate.sleep()
+        self.dist_msg = Float32MultiArray()
+        self.angle_msg = Float32MultiArray()
 
-    def callback(self, radar_msg):
-        for i in range(len(radar_msg.points)) :
-            self.radar_points[i] = Point32(
-                x = radar_msg.points[i].x,
-                y = radar_msg.points[i].y,
-                z = radar_msg.points[i].z
-            )
-        self.is_radar = True
+    def callback(self, msg):
+        radar_out = PointCloud()
+        radar_out.header = Header()
+        radar_out.header.stamp = rospy.Time.now()
+        radar_out.header.frame_id = "sensor_radar"
+        radar_out.points = msg.points
+        self.radar_pub.publish(radar_out)
+        self.gmsg_np = self.geometrymsgs_to_dist(msg.points)
+        self.dist_msg.data = self.calc_dist_forward()
+        print("Distances:", self.dist_msg.data)
+        print("Angles:", self.angle_msg.data)
+
+        rospy.loginfo("Radar message published to '/sensor_radar'")
+        rospy.loginfo("----------------------[ Radar_msg ]----------------------")
+        for p in radar_out.points:
+            rospy.loginfo(f"x: {p.x:.2f}, y: {p.y:.2f}, z: {p.z:.2f}")
+
+    def geometrymsgs_to_dist(self, points):
+        point_list = []
+        for p in points:
+            dist = sqrt(p.x**2 + p.y**2 + p.z**2)
+            angle = atan2(p.y, p.x)*180/pi
+            if p.x > 0 and dist < 100:
+                point_list.append([dist, angle])
+        return np.array(point_list, dtype=np.float32)
+
+    def calc_dist_forward(self):
+        angle_filter = (self.gmsg_np[:,1] > -60) & (self.gmsg_np[:,1] < 60)
+        filtered_gmsg = self.gmsg_np[angle_filter]
+        sorted_indices = np.argsort(filtered_gmsg[:,0])[:10]
+        min_points = filtered_gmsg[sorted_indices]
+        # print(sorted_indices)
+        self.angle_msg.data = min_points[:,1]
+        return min_points[:,0].tolist()
 
 if __name__ == '__main__':
     try:
         RADARParser()
-        #rospy.spin()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
