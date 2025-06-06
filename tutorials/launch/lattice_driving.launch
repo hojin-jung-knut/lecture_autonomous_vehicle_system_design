@@ -2,9 +2,9 @@
     <node pkg="tutorials" type="path_pub.py" name="path_pub"  />
     <node pkg="tutorials" type="gpsimu_parser.py" name="GPS_IMU_parser" />
     <node pkg="tutorials" type="local_path_pub.py" name="path_pub_local" />    
-    <node pkg="tutorials" type="lattice_planner_test.py" name="lattice_planner" output="screen"/>
+    <node pkg="tutorials" type="velodyne_cluster_test.py" name="lidar_parser" />
+    <!--node pkg="tutorials" type="lattice_planner_test.py" name="lattice_planner" output="screen"/-->
     
-    <node pkg="tutorials" type="mgeo_pub.py" name="mgeo_pub"  />
     <node pkg="tutorials" type="tf_pub.py" name="tf"  />
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find tutorials)/rviz/lattice_driving.rviz" />
 </launch>
