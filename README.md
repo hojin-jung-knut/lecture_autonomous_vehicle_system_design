@@ -39,16 +39,17 @@ Rear Overhang(m): 0.7
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
 
 ### Term Project II
-Map: R_KR_PR_Sangam_NoBuildings   [Uploading Sangam_Term_Project2.json…]()
-
+Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/Sangam.txt)   
+Scenario 파일 사용(tutorials/scenarios/Term_Project2_Sangam.json) 
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 날씨 및 시간: Sunny/13:00   
+lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
 출발/도착시간: 출발 waypoint x,y 좌표로부터 1m 벗어난 순간을 출발시간, 도착 waypoint x,y 좌표가 1m 이내로 들어온 순간을 도착시간으로 계산   
 평가방법: data_logger.py 파일로 주행기록 취득 후 정량적 평가 실시   
 - 주행경로   
 ![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)   
-- 교차로 신호 준수   
+- 교차로 신호 준수(적색 신호등 시 정지하고 청색 신호등 시 출발하도록 알고리즘 설계)   
 ![image](https://github.com/user-attachments/assets/efefa6ec-1c29-44d1-b35b-6a3f2366c955)   
 1, 3, 5번 신호등의 경우 초록불로 고정   
 전체 주행 시간에서 신호 대기시간을 빼는 등의 조치 없음   
@@ -59,4 +60,4 @@ Model: 2023_Hyundai_Ioniq5
 - 정적 장애물   
 ② ~ ③ 사이 구간의 주행 경로상에 concrete barricade 배치
 - 센서 고장   
-⑤ 이후에 GPS blackout 구간 존재
+⑤ 이후에 GPS blackout 구간 존재: 카메라 이미지의 차선 검출 정보 기반 제어 알고리즘 설계
