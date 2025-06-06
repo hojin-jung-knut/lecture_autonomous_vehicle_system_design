@@ -1,91 +1,97 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy
-from math import cos,sin,sqrt,pow,atan2
-from morai_msgs.msg  import EgoVehicleStatus,ObjectStatusList
+import rospy, time, numpy as np
+from math import cos, sin, atan2, sqrt, pi
+from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
-import numpy as np
-
+from tf.transformations import euler_from_quaternion
 
 class latticePlanner:
     def __init__(self):
         rospy.init_node('lattice_planner', anonymous=True)
         rospy.Subscriber("/local_path", Path, self.path_callback)
-        rospy.Subscriber("/Ego_topic",EgoVehicleStatus, self.status_callback)
-        rospy.Subscriber("/Object_topic", ObjectStatusList, self.object_callback)
-
+        rospy.Subscriber("/sensor_radar", Float32MultiArray, self.radar_callback)
+        rospy.Subscriber("/sensor_lidar", Float32MultiArray, self.lidar_callback)
+        rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        
         self.lattice_path_pub = rospy.Publisher('/lattice_path', Path, queue_size = 1)
-
-        self.is_path = False
-        self.is_status = False
-        self.is_obj = False
-
+        self.is_path = self.is_radar = self.is_lidar = self.is_odom = False
+        self.xprev = 0
+        self.tprev = time.time()
         rate = rospy.Rate(30) # 30hz
         while not rospy.is_shutdown():
-
-            if self.is_path and self.is_status and self.is_obj:
-                if self.checkObject(self.local_path, self.object_data):
-                    lattice_path = self.latticePlanner(self.local_path, self.status_msg)
-                    lattice_path_index = self.collision_check(self.object_data, lattice_path)
-
-                    # (7)  Publish lattice path 
+            if self.is_path and self.is_lidar and self.is_odom:
+                if self.checkObject(self.local_path, self.odom.pose.pose):
+                    lattice_path = self.latticePlanner(self.local_path, self.odom.pose.pose)
+                    lattice_path_index = self.collision_check(lattice_path, self.odom.pose.pose)
                     self.lattice_path_pub.publish(lattice_path[lattice_path_index])
                 else:
                     self.lattice_path_pub.publish(self.local_path)
             rate.sleep()
 
-    def checkObject(self, ref_path, object_data):
-
+    def checkObject(self, ref_path, vpos):
         is_crash = False
-        for obstacle in object_data.obstacle_list:
-            for path in ref_path.poses:  
-                dis = sqrt(pow(path.pose.position.x - obstacle.position.x, 2) + pow(path.pose.position.y - obstacle.position.y, 2))                
-                
+        for i in range(self.lidar_data.shape[0]):
+            for path in ref_path.poses:
+                angle = euler_from_quaternion([vpos.orientation.x,vpos.orientation.y,vpos.orientation.z,vpos.orientation.w])
+                dis = sqrt((path.pose.position.x - (vpos.position.x+self.lidar_data[i,0]*cos(self.lidar_data[i,1]*pi/180 + angle[2])))**2 + 
+                           (path.pose.position.y - (vpos.position.y+self.lidar_data[i,0]*sin(self.lidar_data[i,1]*pi/180 + angle[2])))**2)
                 if dis < 2.35:          # A collision is considered to occur when the straight-line distance between 
                     is_crash = True     # the obstacle's coordinates and the coordinates on the local path is less than 2.35
                     break
-
         return is_crash
 
-    def collision_check(self, object_data, out_path):
+    def collision_check(self, out_path, vpos):
         #TODO: (6) Select the lowest cost path among the generated collision avoidance paths
         
         selected_lane = -1        
-        lane_weight = [3, 2, 1, 1, 2, 3] #reference path 
-        
-        for obstacle in object_data.obstacle_list:                        
-            for path_num in range(len(out_path)) :                    
-                for path_pos in out_path[path_num].poses :                                
-                    dis = sqrt((obstacle.position.x - path_pos.pose.position.x)**2 + pow(obstacle.position.y - path_pos.pose.position.y)**2)
-                    if dis < 1.5:
+        lane_weight = [3, 2, 1, 1, 2, 3] #reference path
+        for i in range(self.lidar_data.shape[0]):                     
+            for path_num in range(len(out_path)):                    
+                for path_pos in out_path[path_num].poses:
+                    angle = euler_from_quaternion([vpos.orientation.x,vpos.orientation.y,vpos.orientation.z,vpos.orientation.w])
+                    dis = sqrt((path_pos.pose.position.x - (vpos.position.x+self.lidar_data[i,0]*cos(self.lidar_data[i,1]*pi/180 + angle[2])))**2 + 
+                           (path_pos.pose.position.y - (vpos.position.y+self.lidar_data[i,0]*sin(self.lidar_data[i,1]*pi/180 + angle[2])))**2)
+                    if dis < 10:
                         lane_weight[path_num] = lane_weight[path_num] + 100
 
         selected_lane = lane_weight.index(min(lane_weight))     
 
         return selected_lane
 
+    def radar_callback(self,msg):
+        self.is_radar = True
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.radar_data = np.array(msg.data, dtype=np.float32).reshape((rows, cols))
+        #rospy.loginfo("Received array:\n%s", data)
+
+    def lidar_callback(self,msg):
+        self.is_lidar = True
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.lidar_data = np.array(msg.data, dtype=np.float32).reshape((rows, cols))
+        #print(self.lidar_data[0,1])
+
+    def odom_callback(self,msg):
+        self.is_odom = True
+        self.odom = msg  
+
     def path_callback(self,msg):
         self.is_path = True
-        self.local_path = msg  
-        
-    def status_callback(self,msg): ## Vehicl Status Subscriber 
-        self.is_status = True
-        self.status_msg = msg
+        self.local_path = msg
 
-    def object_callback(self,msg):
-        self.is_obj = True
-        self.object_data = msg
-
-    def latticePlanner(self,ref_path, vehicle_status):
+    def latticePlanner(self, ref_path, vpos):
         out_path = []
-        vehicle_pose_x = vehicle_status.position.x
-        vehicle_pose_y = vehicle_status.position.y
-        vehicle_velocity = vehicle_status.velocity.x * 3.6
-
+        vehicle_pose_x = vpos.position.x
+        vehicle_pose_y = vpos.position.y   
+        vehicle_velocity = (vpos.position.x - self.xprev) / (time.time()-self.tprev) * 3.6
+        self.xprev = vpos.position.x
+        self.tprev = time.time()
         look_distance = int(vehicle_velocity * 0.2 * 2)
-
         
         if look_distance < 20 :
             look_distance = 20                    
@@ -139,8 +145,8 @@ class latticePlanner:
                 a = [0.0, 0.0, 0.0, 0.0]
                 a[0] = ps
                 a[1] = 0
-                a[2] = 3.0 * (pf - ps) / (xf ** 2)
-                a[3] = -2.0 * (pf - ps) / (xf ** 2)
+                a[2] = 3.0 * (pf - ps) / (xf**2)
+                a[3] = -2.0 * (pf - ps) / (xf**3)
                 
                 # 3rd order function graph
                 for i in x:
@@ -162,13 +168,12 @@ class latticePlanner:
                     lattice_path.poses.append(read_pose)
 
                 out_path.append(lattice_path)
-
-            # Add_point            
+            
             add_point_size = min(int(vehicle_velocity * 2), len(ref_path.poses) )           
             
-            for i in range(look_distance*2,add_point_size):
+            for i in range(look_distance*2, add_point_size):
                 if i+1 < len(ref_path.poses):
-                    tmp_theta = atan2(ref_path.poses[i + 1].pose.position.y - ref_path.poses[i].pose.position.y,ref_path.poses[i + 1].pose.position.x - ref_path.poses[i].pose.position.x)                    
+                    tmp_theta = atan2(ref_path.poses[i+1].pose.position.y - ref_path.poses[i].pose.position.y,ref_path.poses[i+1].pose.position.x - ref_path.poses[i].pose.position.x)                    
                     tmp_translation = [ref_path.poses[i].pose.position.x,ref_path.poses[i].pose.position.y]
                     tmp_t = np.array([[cos(tmp_theta), -sin(tmp_theta), tmp_translation[0]], [sin(tmp_theta), cos(tmp_theta), tmp_translation[1]], [0, 0, 1]])
 
@@ -187,10 +192,9 @@ class latticePlanner:
                         out_path[lane_num].poses.append(read_pose)
                         
             #TODO: (5) Publish all generated Lattice collision avoidance path messages
-            for i in range(len(out_path)):          
-                globals()['lattice_pub_{}'.format(i+1)] = rospy.Publisher('/lattice_path_{}'.format(i+1),Path,queue_size=1)
-                globals()['lattice_pub_{}'.format(i+1)].publish(out_path[i])
-        
+            self.lattice_pubs = [rospy.Publisher(f'/lattice_path_{i+1}', Path, queue_size=1) for i in range(6)]
+            for i in range(len(out_path)):
+                self.lattice_pubs[i].publish(out_path[i])           
         return out_path
 
 if __name__ == '__main__':
