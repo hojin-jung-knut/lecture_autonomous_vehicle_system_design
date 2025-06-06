@@ -39,7 +39,8 @@ Rear Overhang(m): 0.7
   Network Settings > Ego-0 > Publisher, Subscriber, Service   
 
 ### Term Project II
-Map: R_KR_PR_Sangam_NoBuildings   
+Map: R_KR_PR_Sangam_NoBuildings   [Uploading Sangam_Term_Project2.json…]()
+
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 날씨 및 시간: Sunny/13:00   
@@ -56,3 +57,6 @@ Model: 2023_Hyundai_Ioniq5
 제공된 미션 경로에 차선 변경이 필요한 부분이 있음
 미션 경로를 최대한 벗어나지 않도록 끊긴 경로에 대한 최적화된 경로 계획을 하여 자율주행제어 완성
 - 정적 장애물
+② ~ ③ 사이 구간의 주행 경로상에 concrete barricade 배치
+- 센서 고장
+⑤ 이후에 GPS blackout 구간 존재
