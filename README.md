@@ -40,7 +40,7 @@ Rear Overhang(m): 0.7
 
 ### Term Project II
 Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/Sangam.txt)   
-Scenario 파일 사용(tutorials/scenarios/Term_Project2_Sangam.json) 
+Scenario 파일 사용(tutorials/scenario/Term_Project2_Sangam.json) 
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 날씨 및 시간: Sunny/13:00   
