@@ -56,7 +56,7 @@ Model: 2023_Hyundai_Ioniq5
 ![image](https://github.com/user-attachments/assets/2845996a-528b-4583-b887-e1df590189ae)   
 제공된 미션 경로에 차선 변경이 필요한 부분이 있음
 미션 경로를 최대한 벗어나지 않도록 끊긴 경로에 대한 최적화된 경로 계획을 하여 자율주행제어 완성
-- 정적 장애물
+- 정적 장애물   
 ② ~ ③ 사이 구간의 주행 경로상에 concrete barricade 배치
-- 센서 고장
+- 센서 고장   
 ⑤ 이후에 GPS blackout 구간 존재
