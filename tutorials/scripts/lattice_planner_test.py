@@ -5,8 +5,7 @@ import rospy, time, numpy as np
 from math import cos, sin, atan2, sqrt, pi
 from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import PoseStamped
-from nav_msgs.msg import Odometry
-from nav_msgs.msg import Path
+from nav_msgs.msg import Odometry, Path
 from tf.transformations import euler_from_quaternion
 
 class latticePlanner:
