@@ -88,7 +88,7 @@ class latticePlanner:
         out_path = []
         vehicle_pose_x = vpos.position.x
         vehicle_pose_y = vpos.position.y   
-        vehicle_velocity = (vpos.position.x - self.xprev) / (time.time()-self.tprev) * 3.6
+        vehicle_velocity = (vpos.position.x - self.xprev) / (time.time() - self.tprev) * 3.6
         self.xprev = vpos.position.x
         self.tprev = time.time()
         look_distance = int(vehicle_velocity * 0.2 * 2)
