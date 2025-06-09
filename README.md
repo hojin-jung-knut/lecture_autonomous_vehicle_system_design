@@ -51,8 +51,7 @@ lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)
 ![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)   
 - 교차로 신호 준수(적색 신호등 시 정지하고 청색 신호등 시 출발하도록 알고리즘 설계)   
 ![image](https://github.com/user-attachments/assets/efefa6ec-1c29-44d1-b35b-6a3f2366c955)   
-1, 3, 5번 신호등의 경우 초록불로 고정   
-전체 주행 시간에서 신호 대기시간을 빼는 등의 조치 없음   
+1, 3, 5번 신호등의 경우 초록불로 고정      
 - 차선변경   
 ![image](https://github.com/user-attachments/assets/2845996a-528b-4583-b887-e1df590189ae)   
 제공된 미션 경로에 차선 변경이 필요한 부분이 있음
