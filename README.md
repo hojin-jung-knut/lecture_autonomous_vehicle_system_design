@@ -44,8 +44,8 @@ Rear Overhang(m): 0.7
 ### Term Project II
 Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/Sangam.txt)   
 Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)   
-- C:\Users\Administrator\MoraiLauncher_Win\MoraiLauncher_Win_Data\SaveFile\Scenario\R_KR_PR_Sangam_NoBuildings 위치에 json 파일 저장
-- MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기
+- C:\Users\Administrator\MoraiLauncher_Win\MoraiLauncher_Win_Data\SaveFile\Scenario\R_KR_PR_Sangam_NoBuildings 위치에 json 파일 저장   
+- MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 날씨 및 시간: Term Project1과 동일   
