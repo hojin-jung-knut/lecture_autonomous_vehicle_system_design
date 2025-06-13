@@ -1,3 +1,6 @@
+roslaunch rosbridge_server rosbridge_websocket.launch
+roslaunch velodyne_pointcloud VLP16_points.launch
+
 ### Term Project I
 Map: R_KR_PG_C-track_outdoor(tutorials/path/C-track_outdoor.txt)   
 Model: 2023_Hyundai_Ioniq5   
