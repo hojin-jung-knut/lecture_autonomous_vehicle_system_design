@@ -1,4 +1,4 @@
-roslaunch rosbridge_server rosbridge_websocket.launch
+roslaunch rosbridge_server rosbridge_websocket.launch   
 roslaunch velodyne_pointcloud VLP16_points.launch
 
 ### Term Project I
