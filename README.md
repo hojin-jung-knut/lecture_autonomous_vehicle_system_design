@@ -5,8 +5,8 @@ roslaunch velodyne_pointcloud VLP16_points.launch
 Map: R_KR_PG_C-track_outdoor(tutorials/path/C-track_outdoor.txt)   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
-날씨 및 시간: Sunny/13:00   
 pure_pursuit_test.launch 파일 사용(tutorials/launch/pure_pursuit_test.launch)   
+날씨 및 시간: Sunny/13:00   
 출발/도착시간: 출발 waypoint x,y 좌표로부터 1m 벗어난 순간을 출발시간, 도착 waypoint x,y 좌표가 1m 이내로 들어온 순간을 도착시간으로 계산   
 평가방법: data_logger.py 파일로 주행기록 취득 후 정량적 평가 실시   
 주요 변경 파라미터: 속도제어 pid값, 전방주시거리    
@@ -48,9 +48,11 @@ Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)
    MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
-날씨 및 시간: Term Project1과 동일   
+   
 lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
+pure_pursuit or stanley 파일의 /local_path를 lattice_planner 파일의 /lattice_path로 대체하여 사용   
 Object topic 사용 불가   
+날씨 및 시간: Term Project1과 동일
 출발/도착시간: Term Project1과 동일   
 평가방법: Term Project1과 동일   
 - 주행경로   
