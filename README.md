@@ -50,13 +50,11 @@ Model: 2023_Hyundai_Ioniq5
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 날씨 및 시간: Term Project1과 동일   
 lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
+Object topic 사용 불가   
 출발/도착시간: Term Project1과 동일   
 평가방법: Term Project1과 동일   
 - 주행경로   
-![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)   
-- 교차로 신호 준수(적색 신호등 시 정지하고 청색 신호등 시 출발하도록 알고리즘 설계)   
-![image](https://github.com/user-attachments/assets/efefa6ec-1c29-44d1-b35b-6a3f2366c955)   
-1, 3, 5번 신호등의 경우 초록불로 고정      
+![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)      
 - 차선변경   
 ![image](https://github.com/user-attachments/assets/2845996a-528b-4583-b887-e1df590189ae)   
 제공된 미션 경로에 차선 변경이 필요한 부분이 있음
