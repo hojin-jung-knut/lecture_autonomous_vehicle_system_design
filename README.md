@@ -48,7 +48,6 @@ Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)
    MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
-   
 lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
 pure_pursuit or stanley 파일의 /local_path를 lattice_planner 파일의 /lattice_path로 대체하여 사용   
 Object topic 사용 불가   
@@ -62,6 +61,6 @@ Object topic 사용 불가
 제공된 미션 경로에 차선 변경이 필요한 부분이 있음
 미션 경로를 최대한 벗어나지 않도록 끊긴 경로에 대한 최적화된 경로 계획을 하여 자율주행제어 완성
 - 정적 장애물   
-② ~ ③ 사이 구간의 주행 경로상에 concrete barricade 배치
+주행 경로상에 concrete barricade 배치
 - 센서 고장   
-⑤ 이후에 GPS blackout 구간 존재: 카메라 이미지의 차선 검출 정보 기반 제어 알고리즘 설계
+GPS blackout 구간 존재: 카메라 이미지의 차선 검출 정보 기반 제어 알고리즘 설계
