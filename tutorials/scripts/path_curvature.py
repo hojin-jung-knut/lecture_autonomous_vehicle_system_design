@@ -33,10 +33,11 @@ class Road:
                 rospy.loginfo('Path data received')
             else:
                 rospy.loginfo('Waiting for global path data')
-            if time.time() - self.last_log_time > 1:
-                log = np.around([time.time()-self.log_start_time, self.curvature], 4)
+            current_time = time.time()
+            if current_time - self.last_log_time > 1:
+                log = np.around([current_time - self.log_start_time, self.curvature], 4)
                 self.csv_writer.writerow(log)
-                self.last_log_time = time.time()    
+                self.last_log_time = current_time 
             self.reset_flags()
             rate.sleep()
 
@@ -60,32 +61,49 @@ class Curvature:
         self.i = 0
 
     def path_curvature(self, global_path, pose, point_num):
-        print(len(global_path.poses))
+        # 가장 가까운 점 찾기
+        closest_idx = 0
+        min_dist = float('inf')
         for i in range(1, len(global_path.poses)-1):
-            if ((pose.x-global_path.poses[i].pose.position.x)**2 + (pose.y-global_path.poses[i].pose.position.y)**2) < ((pose.x-global_path.poses[self.i].pose.position.x)**2 + (pose.y-global_path.poses[self.i].pose.position.y)**2):
-                self.i = i
-        print(self.i)
-        x_list = []
-        y_list = []
-        for box in range(-point_num, point_num):
-            x = global_path.poses[self.i + box].pose.position.x
-            y = global_path.poses[self.i + box].pose.position.y
+            dx = pose.x - global_path.poses[i].pose.position.x
+            dy = pose.y - global_path.poses[i].pose.position.y
+            dist = dx**2 + dy**2
+            if dist < min_dist:
+                min_dist = dist
+                closest_idx = i
+
+        # 안전한 범위 설정
+        start = max(0, closest_idx - point_num)
+        end = min(len(global_path.poses), closest_idx + point_num)
+        if end - start < 3:
+            return 0.0  # 충분한 점이 없으면 0 반환
+
+        x_list, y_list = [], []
+        for j in range(start, end):
+            x = global_path.poses[j].pose.position.x
+            y = global_path.poses[j].pose.position.y
             x_list.append([-2*x, -2*y, 1])
-            y_list.append(-x**2-y**2)
+            y_list.append(-x**2 - y**2)
 
         x_matrix = np.array(x_list)
         y_matrix = np.array(y_list)
-        x_trans = x_matrix.T
-
-        a_matrix = np.linalg.inv(x_trans.dot(x_matrix)).dot(x_trans).dot(y_matrix)
+        a_matrix = np.linalg.pinv(x_matrix.T @ x_matrix) @ x_matrix.T @ y_matrix
         a, b, c = a_matrix
+        r = sqrt(a**2 + b**2 - c)
 
-        return sqrt(a**2 + b**2 - c)
+        if r < 6:
+            r = 6
+        elif r > 100:
+            r = 100
+
+        return r
 
 if __name__ == '__main__':
+    road = None
     try:
         road = Road("tutorials", "log_curvature")
     except rospy.ROSInterruptException:
         pass
     finally:
-        road.stop()
+        if road:
+            road.stop()
