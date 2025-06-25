@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy, rospkg, os, csv, time
+import rospy, time
 import numpy as np
 from math import cos, sin, sqrt, atan2
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry, Path
-from morai_msgs.msg import CtrlCmd, EgoVehicleStatus
+from morai_msgs.msg import CtrlCmd, EgoVehicleStatus, EventInfo
 from tf.transformations import euler_from_quaternion
+import path_curvature
+from morai_msgs.srv import MoraiEventCmdSrv
+from enum import Enum
+
+class Gear(Enum):
+	P = 1
+	R = 2
+	N = 3
+	D = 4
+
 
 class PIDControl:
-    def __init__(self, p_gain=0.3, i_gain=0.07, d_gain=0.03, control_time=0.02):
+    def __init__(self, p_gain=0.3, i_gain=0.03, d_gain=0.003, control_time=0.01):
         self.p_gain = p_gain
         self.i_gain = i_gain
         self.d_gain = d_gain
@@ -30,45 +40,55 @@ class PIDControl:
         return p_control + self.i_control + d_control
 
 class PurePursuit:
-    def __init__(self, pkg_name, path_name):
+    def __init__(self):
         rospy.init_node('pure_pursuit', anonymous=True)   
         rospy.Subscriber("/local_path", Path, self.path_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         rospy.Subscriber("/Ego_topic", EgoVehicleStatus, self.status_callback)
-        self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=1)
-
+        self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd_0', CtrlCmd, queue_size=1) # check topic in MORAI Sim (/ctrl_cmd_0)
+        
         self.is_path = self.is_odom = self.is_status = False
-        self.target_vel = 40  # Target velocity in km/h
+        self.target_vel = 60.0  # in m/s
         self.current_vel = 0.0
         self.forward_point = self.current_position = Point()
         self.is_look_forward_point = False
         self.vehicle_length = 3.0
-        self.lfd = 20.0  # Look-ahead distance
-
-        self.log_start_time = time.time()
-        self.last_log_time = 0.0
-
-        rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path(pkg_name)
-        self.log_file_path = os.path.join(pkg_path, f"{path_name}.csv") # Use os.path.join
-
-        self.csv_file = open(self.log_file_path, mode='w', newline='')
-        self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['time', 'pos_x', 'pos_xd', 'pos_y', 'pos_yd', 'accel', 'brake', 'steer'])
-
+        self.lfd = 5.0 # Look-ahead distance
         self.pid_controller = PIDControl()
+        self.curv = path_curvature.Curvature()
+        rospy.wait_for_service('/Service_MoraiEventCmd')
+        self.event_cmd_srv = rospy.ServiceProxy('Service_MoraiEventCmd', MoraiEventCmdSrv)
+        self.send_gear_cmd(Gear.D.value)
         self.control_loop()
 
     def control_loop(self):
-        rate = rospy.Rate(15)
+        self.rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.is_path and self.is_odom and self.is_status:
+                path_count = len(np.array(self.path.poses)) -5
+                # if path_count < 5: self.target_vel = 0
+                if path_count > 5:
+                    curvature = self.curv.path_curvature(self.path, self.current_position, path_count)
+                print(path_count)
+                if path_count < 7 :
+                    print("DONE!")
+                    self.send_gear_cmd(Gear.P.value)
+                    break
+                if curvature <= 200:
+                # print(sqrt(curvature * 9.81 * 1))
+                    self.target_vel = sqrt(curvature * 9.81 * 1)
+                    if 50 < curvature < 200:
+                        self.target_vel = 40.0
+                    if curvature < 40 :
+                        self.target_vel  = 10.0
+                else: self.target_vel = 60.0
+                print("curvature / self.target_vel", curvature, self.target_vel)
+                rospy.logwarn("curvature :%d", curvature)
                 self.pure_pursuit_control()
             else:
-                self.log_missing_data()
-
+                self.missing_topics()
             self.reset_flags()
-            rate.sleep()
+            self.rate.sleep()
 
     def pure_pursuit_control(self):
         translation = [self.current_position.x, self.current_position.y]
@@ -90,16 +110,18 @@ class PurePursuit:
             self.publish_control_commands(local_path_point)
         else:
             rospy.logwarn("No forward point found")
-            self.publish_control_commands([0, 0, 0], zero_velocity=True)
+            self.publish_control_commands([0, 0, 0], err=True)
 
-    def publish_control_commands(self, local_path_point, zero_velocity=False):
+    def publish_control_commands(self, local_path_point, err=False):
         self.ctrl_cmd_msg = CtrlCmd()
         self.ctrl_cmd_msg.longlCmdType = 1 # Acceleration control type
 
-        if zero_velocity:
+        if err:
             self.ctrl_cmd_msg.steering = self.ctrl_cmd_msg.velocity = 0.0
         else:
             theta = atan2(local_path_point[1], local_path_point[0])
+            self.lfd = self.current_vel * 0.7
+            if self.lfd < 5: self.lfd = 5
             self.ctrl_cmd_msg.steering = atan2(2 * self.vehicle_length * sin(theta), self.lfd)
             output = self.pid_controller.pid(self.target_vel, self.current_vel * 3.6)
 
@@ -125,7 +147,7 @@ class PurePursuit:
     def reset_flags(self):
         self.is_path = self.is_odom = self.is_status = False
 
-    def log_missing_data(self):
+    def missing_topics(self):
         if not self.is_path:
             rospy.logwarn("Missing '/local_path' topic")
         if not self.is_odom:
@@ -145,23 +167,24 @@ class PurePursuit:
         self.is_odom = True
         odom_quaternion = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, self.vehicle_yaw = euler_from_quaternion(odom_quaternion)
-        self.current_position.x = msg.pose.pose.position.x
-        self.current_position.y = msg.pose.pose.position.y
-        if time.time() - self.last_log_time > 1:
-            print(f"x: {self.current_position.x:.2f}, y: {self.current_position.y:.2f}")
-            log = np.around([time.time() - self.log_start_time, self.current_position.x, self.forward_point.x, self.current_position.y,
-                             self.forward_point.y, self.ctrl_cmd_msg.accel, self.ctrl_cmd_msg.brake, self.ctrl_cmd_msg.steering], 4)
-            self.csv_writer.writerow(log)
-            self.last_log_time = time.time()
+        self.current_position = msg.pose.pose.position
 
-    def stop(self):
-        print("Logging finished")
-        self.csv_file.close()
-
+    def send_gear_cmd(self, gear_mode):
+		# 기어 변경이 제대로 되기 위해서는 차량 속도가 약 0이어야 함.
+        while(abs(self.current_vel) > 0.1):
+            self.ctrl_cmd_msg.brake = 1
+            self.ctrl_cmd_pub.publish(self.ctrl_cmd_msg)
+            self.rate.sleep()
+            
+        gear_cmd = EventInfo()
+        gear_cmd.option = 3
+        gear_cmd.ctrl_mode = 3
+        gear_cmd.gear = gear_mode
+        # gear_cmd.resp = self.event_cmd_srv(gear_cmd)
+        rospy.loginfo(gear_cmd)    
+        
 if __name__ == '__main__':
     try:
-        pure_pursuit = PurePursuit("tutorials", "log_pure_pursuit_pid")
+        pure_pursuit = PurePursuit()
     except rospy.ROSInterruptException:
         pass
-    finally:
-        pure_pursuit.stop()
