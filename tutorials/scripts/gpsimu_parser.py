@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
  
-import rospy
-import tf
-import os
-from std_msgs.msg import Float32MultiArray
+import rospy, os
 from sensor_msgs.msg import Imu
 from morai_msgs.msg import GPSMessage
 from nav_msgs.msg import Odometry
 from pyproj import Proj
-from math import pi
 
 class GPSIMUParser:
     def __init__(self):
@@ -19,8 +15,7 @@ class GPSIMUParser:
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=1)
         # 초기화
         self.x, self.y = None, None
-        self.is_imu = False
-        self.is_gps = False
+        self.is_imu = self.is_gps = False
 
         self.proj_UTM = Proj(proj='utm', zone=52, ellps='WGS84', preserve_units=False)
 
@@ -57,8 +52,7 @@ class GPSIMUParser:
         xy_zone = self.proj_UTM(self.lon, self.lat)
 
         if self.lon == 0 and self.lat == 0:
-            self.x = 0.0
-            self.y = 0.0
+            self.x, self.y = 0.0, 0.0
         else:
             self.x = xy_zone[0] - self.e_o
             self.y = xy_zone[1] - self.n_o
@@ -66,7 +60,7 @@ class GPSIMUParser:
         self.odom_msg.header.stamp = rospy.get_rostime()
         self.odom_msg.pose.pose.position.x = self.x
         self.odom_msg.pose.pose.position.y = self.y
-        self.odom_msg.pose.pose.position.z = 0.
+        self.odom_msg.pose.pose.position.z = 0.0
 
     def imu_callback(self, data):
         if data.orientation.w == 0:
@@ -79,7 +73,6 @@ class GPSIMUParser:
             self.odom_msg.pose.pose.orientation.y = data.orientation.y
             self.odom_msg.pose.pose.orientation.z = data.orientation.z
             self.odom_msg.pose.pose.orientation.w = data.orientation.w
-
         self.is_imu = True
 
 if __name__ == '__main__':
