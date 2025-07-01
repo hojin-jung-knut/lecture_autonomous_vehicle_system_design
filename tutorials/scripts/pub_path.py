@@ -18,13 +18,13 @@ class path_pub:
         self.current_block = 0
         self.k, self.k_init = 0, 0
         self.is_odom = False
+        self.is_loop = True
         self.start_time = time.time()
 
         rospack = rospkg.RosPack()
         pkg_path = rospack.get_path('tutorials')
         full_path = pkg_path + '/path/k-city.txt'
         #full_path = pkg_path+'/path/c-track.txt'
-        print(full_path)
 
         with open(full_path, 'r') as f:
             for line in f.readlines():
@@ -37,6 +37,7 @@ class path_pub:
         self.global_path = self.full_global_path
         rate = rospy.Rate(20)
         self.current_block = len(self.full_global_path)//30
+        print(self.current_block)
         while not rospy.is_shutdown():
             if self.is_odom:
                 x, y = self.x, self.y
@@ -49,23 +50,37 @@ class path_pub:
                     if dist < min_dis:
                         min_dis = dist
                         current_idx = i
-                        if self.k_init < 1:
-                            self.k = int(current_idx/len(self.full_global_path)*30)
-                            self.k_init = 1
+                if self.k_init < 1:
+                    self.k = int(current_idx/len(self.full_global_path)*30)      
+                    if self.k == 29:
+                        if self.is_loop:
+                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:self.current_block]
+                        else:
+                            self.global_path = self.full_global_path[self.k*self.current_block:]
+                    else:
+                        self.global_path = self.full_global_path[self.k*self.current_block:]
+                    current_idx -= self.k*self.current_block
+                    self.k_init = 1
+                if current_idx > self.current_block:                
+                    self.k += 1
+                    self.k %= 30
+                    if self.k == 29:
+                        if self.is_loop:
+                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:self.current_block]
+                        else:
+                            self.global_path = self.full_global_path[self.k*self.current_block:]
+                    else:
+                        self.global_path = self.full_global_path[self.k*self.current_block:]
+                    continue
                 if current_idx == -1:
                     rate.sleep()
                     continue
-                if current_idx > self.current_block:
-                    self.k += 1
-                    self.global_path = self.full_global_path[self.k*current_block:]
-                if self.k == 29 and current_idx > self.current_block - 5:
-                    self.global_path = self.full_global_path[self.k*current_block+current_idx:current_block]
-                    self.k = 0
-                
+                print(current_idx)
+                print(self.k)
                 # Global path
                 global_path_msg = Path()
                 global_path_msg.header.frame_id = 'map'
-                global_path_msg.poses = self.full_global_path
+                global_path_msg.poses = self.global_path
 
                 # Local path
                 local_end = min(len(self.global_path), current_idx + self.local_path_size)
