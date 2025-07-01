@@ -21,6 +21,7 @@ class path_pub :
         rospack = rospkg.RosPack()
         pkg_path = rospack.get_path('tutorials')
         full_path = pkg_path + '/path' + '/k-city.txt'
+        #full_path = pkg_path+'/path'+'/c-track.txt'
         print(full_path)
         self.f = open(full_path,'r')
         lines = self.f.readlines()
