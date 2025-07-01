@@ -15,8 +15,8 @@ class path_pub:
 
         self.full_global_path, self.global_path = [], []
         self.local_path_size = 50
-        self.k = 0
-        self.k_init = 0
+        self.current_block = 0
+        self.k, self.k_init = 0, 0
         self.is_odom = False
         self.start_time = time.time()
 
@@ -36,7 +36,7 @@ class path_pub:
                 self.full_global_path.append(pose)
         self.global_path = self.full_global_path
         rate = rospy.Rate(20)
-        
+        self.current_block = len(self.full_global_path)//30
         while not rospy.is_shutdown():
             if self.is_odom:
                 x, y = self.x, self.y
@@ -55,12 +55,11 @@ class path_pub:
                 if current_idx == -1:
                     rate.sleep()
                     continue
-                current_block = len(self.full_global_path)//30
-                if current_idx > current_block:
+                if current_idx > self.current_block:
                     self.k += 1
                     self.global_path = self.full_global_path[self.k*current_block:]
-                if self.k == 29 and current_idx > len(self.global_path) - 5:
-                    self.global_path = self.full_global_path
+                if self.k == 29 and current_idx > self.current_block - 5:
+                    self.global_path = self.full_global_path[self.k*current_block+current_idx:current_block]
                     self.k = 0
                 
                 # Global path
