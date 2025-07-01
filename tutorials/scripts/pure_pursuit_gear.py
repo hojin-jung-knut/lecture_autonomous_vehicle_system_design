@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy, time
-import numpy as np
+import rospy, numpy as np
+import path_curvature
 from math import cos, sin, sqrt, atan2
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry, Path
 from morai_msgs.msg import CtrlCmd, EgoVehicleStatus, EventInfo
 from tf.transformations import euler_from_quaternion
-import path_curvature
 from morai_msgs.srv import MoraiEventCmdSrv
 from enum import Enum
 
@@ -48,6 +47,9 @@ class PurePursuit:
         self.ctrl_cmd_pub = rospy.Publisher('/ctrl_cmd_0', CtrlCmd, queue_size=1) # check topic in MORAI Sim (/ctrl_cmd_0)
         
         self.is_path = self.is_odom = self.is_status = False
+        self.is_gear = False
+        self.ctrl_cmd_msg = CtrlCmd()
+        self.ctrl_cmd_msg.longlCmdType = 1
         self.target_vel = 60.0  # in m/s
         self.current_vel = 0.0
         self.forward_point = self.current_position = Point()
@@ -65,7 +67,7 @@ class PurePursuit:
         self.rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.is_path and self.is_odom and self.is_status:
-                path_count = len(np.array(self.path.poses)) -5
+                path_count = len(np.array(self.path.poses)) - 5
                 # if path_count < 5: self.target_vel = 0
                 if path_count > 5:
                     curvature = self.curv.path_curvature(self.path, self.current_position, path_count)
@@ -113,9 +115,6 @@ class PurePursuit:
             self.publish_control_commands([0, 0, 0], err=True)
 
     def publish_control_commands(self, local_path_point, err=False):
-        self.ctrl_cmd_msg = CtrlCmd()
-        self.ctrl_cmd_msg.longlCmdType = 1 # Acceleration control type
-
         if err:
             self.ctrl_cmd_msg.steering = self.ctrl_cmd_msg.velocity = 0.0
         else:
@@ -170,18 +169,17 @@ class PurePursuit:
         self.current_position = msg.pose.pose.position
 
     def send_gear_cmd(self, gear_mode):
-		# 기어 변경이 제대로 되기 위해서는 차량 속도가 약 0이어야 함.
+		# Vehicle velocity should be zero for gear change
         while(abs(self.current_vel) > 0.1):
             self.ctrl_cmd_msg.brake = 1
             self.ctrl_cmd_pub.publish(self.ctrl_cmd_msg)
             self.rate.sleep()
-            
         gear_cmd = EventInfo()
         gear_cmd.option = 3
         gear_cmd.ctrl_mode = 3
         gear_cmd.gear = gear_mode
-        # gear_cmd.resp = self.event_cmd_srv(gear_cmd)
-        rospy.loginfo(gear_cmd)    
+        resp = self.event_cmd_srv(gear_cmd)
+        rospy.loginfo(resp)    
         
 if __name__ == '__main__':
     try:
