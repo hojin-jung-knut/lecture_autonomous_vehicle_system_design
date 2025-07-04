@@ -1,8 +1,12 @@
+### MORAI Sim 통신 및 lidar 센서 연결
 roslaunch rosbridge_server rosbridge_websocket.launch   
 roslaunch velodyne_pointcloud VLP16_points.launch
+### ROS 기본 실행 명령어
+rosrun tutorials [python_file_name].py
+roslaunch tutorials [launch_file_name].launch
 
 ### Term Project I
-Map: R_KR_PG_C-track_outdoor(tutorials/path/C-track_outdoor.txt)   
+Map: R_KR_PG_C-track_outdoor(tutorials/path/c-track.txt)   
 Model: 2023_Hyundai_Ioniq5   
 센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 pure_pursuit_test.launch 파일 사용(tutorials/launch/pure_pursuit_test.launch)   
@@ -11,7 +15,6 @@ pure_pursuit_test.launch 파일 사용(tutorials/launch/pure_pursuit_test.launch
 평가방법: data_logger.py 파일로 주행기록 취득 후 정량적 평가 실시   
 주요 변경 파라미터: 속도제어 pid값, 전방주시거리    
 평가기준: 주행 기록의 값을 최소화    
-- Waypoint 좌표와 차량 gps 위치 좌표의 오차가 0.75m보다 큰 지점이 1점 이상 발생한 경우 1초씩 패널티 부과
 - 총점 20점(완주 시 15점 + 1위 5점부터 등수대로 0.5점씩 차감). 미완주시 0점(추후 완주 코드 및 기록 제출시 완주 점수 획득 가능)   
 - 미완주 차량은 완주 차량보다 순위가 낮으며 출발지로부터 목적지까지 가까이 갈수록 순위가 높음   
 - 텀프로젝트 발표시 인당 3번의 프로그램 실행기회 부여   
@@ -42,7 +45,7 @@ Rear Overhang(m): 0.7
   Network Settings > Ego-0 > Publisher, Subscriber, Service  (morai_msgs/Ego_topic)   
 
 ### Term Project II
-Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/Sangam.txt)   
+Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/sangam.txt)   
 Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)   
 - C:\Users\Administrator\MoraiLauncher_Win\MoraiLauncher_Win_Data\SaveFile\Scenario\R_KR_PR_Sangam_NoBuildings 위치에 json 파일 저장   
 - MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기   
