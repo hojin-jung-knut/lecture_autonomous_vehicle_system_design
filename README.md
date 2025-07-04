@@ -31,19 +31,19 @@ Wheelbase(m): 3
 Front Overhang(m): 0.845   
 Rear Overhang(m): 0.7   
 
-#### Simulator Network
-- Ego Ctrl Cmd    
-  Network Settings > Ego-0 > Cmd Control (morai_msgs/CtrlCmd)    
-  /ctrl_cmd(또는 ctrl_cmd_0) 제어시, longCmdType = 1 (accel, brake) 제어를 사용해야 함   
-- Event Cmd Srv   
-  차량 기어 변경   
-  Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/EventCmdSrv)   
-- CollisionData   
+#### 주요 Simulator Network Info.
+##### Vehicle Status   
+  주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공   
+  Network Settings > Ego-0 > Publisher, Subscriber, Service  (morai_msgs/Ego_topic)  
+##### Ego Ctrl Cmd    
+- Network Settings > Ego-0 > Cmd Control (morai_msgs/CtrlCmd)    
+- /ctrl_cmd(또는 ctrl_cmd_0) 제어시, longCmdType = 1 (accel, brake) 제어를 사용해야 함   
+##### Event Cmd Srv   
+- 차량 기어 변경   
+- Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/EventCmdSrv)   
+##### CollisionData   
   충돌 여부 확인   
   Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/CollisionData)   
-- Vehicle Status   
-  주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공   
-  Network Settings > Ego-0 > Publisher, Subscriber, Service  (morai_msgs/Ego_topic)   
 
 ### Term Project II
 Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/sangam.txt)   
