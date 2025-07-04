@@ -53,9 +53,9 @@ Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)
 lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
 pure_pursuit.py or stanley.py 파일의 /local_path를 lattice_planner 파일의 /lattice_path로 대체하여 사용   
 
-Model: Term Project1과 동일
+Model: Term Project1과 동일   
 센서 세팅 조건: Term Project1과 동일   
-날씨 및 시간: Term Project1과 동일
+날씨 및 시간: Term Project1과 동일   
 출발/도착시간: Term Project1과 동일   
 평가방법: Term Project1과 동일   
 
