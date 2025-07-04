@@ -32,33 +32,33 @@ Front Overhang(m): 0.845
 Rear Overhang(m): 0.7   
 
 #### 주요 Simulator Network Info.
-##### Vehicle Status   
-  주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공   
-  Network Settings > Ego-0 > Publisher, Subscriber, Service  (morai_msgs/Ego_topic)  
+##### Vehicle Status    
+- Network Settings > Ego-0 > Publisher, Subscriber, Service  (morai_msgs/Ego_topic)    
+- 주행 기록계 : 현재 종방향 속도,  wheel_angle, Accel, Brake 값을 제공    
 ##### Ego Ctrl Cmd    
 - Network Settings > Ego-0 > Cmd Control (morai_msgs/CtrlCmd)    
-- /ctrl_cmd(또는 ctrl_cmd_0) 제어시, longCmdType = 1 (accel, brake) 제어를 사용해야 함   
+- /ctrl_cmd(또는 ctrl_cmd_0) 제어시, longCmdType = 1 (accel, brake) 방식의 제어를 사용    
 ##### Event Cmd Srv   
-- 차량 기어 변경   
-- Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/EventCmdSrv)   
-##### CollisionData   
-  충돌 여부 확인   
-  Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/CollisionData)   
+- Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/EventCmdSrv)    
+- 차량 기어 변경(P,R,N,D) 명령어     
+##### CollisionData     
+- Network Settings > Ego-0 > Publisher, Subscriber, Service (morai_msgs/CollisionData)     
+- 차량과 장애물 및 주변 지형/지물 간 충돌 여부 확인     
 
 ### Term Project II
 Map: R_KR_PR_Sangam_NoBuildings(tutorials/path/sangam.txt)   
 Scenario 파일 사용(tutorials/scenario/Sangam_Term_Project2.json)   
 - C:\Users\Administrator\MoraiLauncher_Win\MoraiLauncher_Win_Data\SaveFile\Scenario\R_KR_PR_Sangam_NoBuildings 위치에 json 파일 저장   
 - MORAI Sim -> Edit -> Scenario -> Load Scenario에서 저장한 json 파일 불러오기   
-
-Model: 2023_Hyundai_Ioniq5   
-센서 세팅 조건(장착 위치 및 개수, 노이즈 수준 등) 변경 불가   
 lattice_driving.launch 파일 사용(tutorials/launch/lattice_driving.launch)   
-pure_pursuit or stanley 파일의 /local_path를 lattice_planner 파일의 /lattice_path로 대체하여 사용   
-Object topic 사용 불가   
+pure_pursuit.py or stanley.py 파일의 /local_path를 lattice_planner 파일의 /lattice_path로 대체하여 사용   
+
+Model: Term Project1과 동일
+센서 세팅 조건: Term Project1과 동일   
 날씨 및 시간: Term Project1과 동일
 출발/도착시간: Term Project1과 동일   
 평가방법: Term Project1과 동일   
+
 - 주행경로   
 ![image](https://github.com/user-attachments/assets/902ada86-1239-4bfb-bdc7-1b0f0714c2f5)      
 - 차선변경   
@@ -68,4 +68,4 @@ Object topic 사용 불가
 - 정적 장애물   
 주행 경로상에 concrete barricade 배치
 - 센서 고장   
-GPS blackout 구간 존재: 카메라 이미지의 차선 검출 정보 기반 제어 알고리즘 설계
+GPS blackout 구간 존재: 카메라 이미지의 차선 검출 정보 or dead-reckoning 기반 제어 알고리즘 설계
