@@ -30,10 +30,16 @@ class DataLogger:
     def main(self):
         rate = rospy.Rate(30)
         while not rospy.is_shutdown():
-            if self.is_odom and self.is_path and self.is_status:
+            if self.is_odom == True and self.is_path == True and self.is_status == True:
                 self.forward_path()
+                if self.is_look_forward_point == True and (self.last_pose_x - self.pose.x)**2 + (self.last_pose_y - self.pose.y)**2 > 1:
+                    log = np.around([time.time() - self.log_start_time, self.pose.x, self.forward_point.x, self.pose.y, 
+                             self.forward_point.y, self.ego.velocity.x*3.6, self.ego.wheel_angle, self.ego.accel, self.ego.brake], 4)
+                    self.csv_writer.writerow(log)
+                    self.last_pose_x, self.last_pose_y = self.pose.x, self.pose.y 
             else:
                 rospy.loginfo("Waiting for odometry and path data...")
+            self.reset_flags()
             rate.sleep()
 
     def forward_path(self):
@@ -72,14 +78,6 @@ class DataLogger:
         self.pose = msg.pose.pose.position
         odom_quaternion = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, self.vehicle_yaw = euler_from_quaternion(odom_quaternion)
-        if self.is_look_forward_point and (self.last_pose_x - self.pose.x)**2 + (self.last_pose_y - self.pose.y)**2 > 1:
-            # print(f"x: {self.pose.x:.2f}, y: {self.pose.y:.2f}")
-            log = np.around([time.time() - self.log_start_time, self.pose.x, self.forward_point.x, self.pose.y, 
-                             self.forward_point.y, self.ego.velocity.x*3.6, self.ego.wheel_angle, self.ego.accel, self.ego.brake], 4)
-            self.csv_writer.writerow(log)
-            self.last_log_time = time.time()
-            self.last_pose_x = self.pose.x
-            self.last_pose_y = self.pose.y
 
     def status_callback(self, msg):
         self.is_status = True
@@ -88,6 +86,9 @@ class DataLogger:
     def stop(self):
         print("Logging finished")
         self.csv_file.close()
+
+    def reset_flags(self):
+        self.is_path = self.is_odom = self.is_status = False
 
 if __name__ == '__main__':
     try:
