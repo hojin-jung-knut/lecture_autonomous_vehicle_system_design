@@ -30,14 +30,15 @@ class path_pub:
             for line in f.readlines():
                 tmp = line.strip().split()
                 pose = PoseStamped()
+                pose.header.frame_id = 'map'
                 pose.pose.position.x = float(tmp[0])
                 pose.pose.position.y = float(tmp[1])
                 pose.pose.orientation.w = 1
                 self.full_global_path.append(pose)
         self.global_path = self.full_global_path
-        rate = rospy.Rate(20)
         self.current_block = len(self.full_global_path)//30
-        print(self.current_block)
+
+        rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.is_odom:
                 x, y = self.x, self.y
@@ -52,31 +53,31 @@ class path_pub:
                         current_idx = i
                 if self.k_init < 1:
                     self.k = int(current_idx/len(self.full_global_path)*30)      
-                    if self.k == 29:
+                    if self.k > 25:
                         if self.is_loop:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:self.current_block]
+                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:(self.k-25)*self.current_block]
                         else:
                             self.global_path = self.full_global_path[self.k*self.current_block:]
                     else:
-                        self.global_path = self.full_global_path[self.k*self.current_block:]
+                        self.global_path = self.full_global_path[self.k*self.current_block:(self.k+5)*self.current_block]
                     current_idx -= self.k*self.current_block
                     self.k_init = 1
                 if current_idx > self.current_block:                
                     self.k += 1
                     self.k %= 30
-                    if self.k == 29:
+                    if self.k > 25:
                         if self.is_loop:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:self.current_block]
+                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:(self.k-25)*self.current_block]
                         else:
                             self.global_path = self.full_global_path[self.k*self.current_block:]
                     else:
-                        self.global_path = self.full_global_path[self.k*self.current_block:]
+                        self.global_path = self.full_global_path[self.k*self.current_block:(self.k+5)*self.current_block]
                     continue
                 if current_idx == -1:
+                    rospy.logwarn("Failed to find nearest waypoint.")
                     rate.sleep()
                     continue
-                print(current_idx)
-                print(self.k)
+
                 # Global path
                 global_path_msg = Path()
                 global_path_msg.header.frame_id = 'map'
@@ -88,11 +89,11 @@ class path_pub:
                 local_path_msg.header.frame_id = 'map'
                 local_path_msg.poses = self.global_path[current_idx:local_end]
 
-                if time.time() - self.start_time < 5:
-                    self.global_path_pub.publish(global_path_msg)
+                #if time.time() - self.start_time < 5:
+                self.global_path_pub.publish(global_path_msg)
                 self.local_path_pub.publish(local_path_msg)
 
-                print(f"Current position: ({x:.2f}, {y:.2f})")
+                rospy.loginfo(f"Current Position x: {x:.2f}, y: {y:.2f}")
 
             rate.sleep()
 
@@ -103,6 +104,6 @@ class path_pub:
 
 if __name__ == '__main__':
     try:
-        path = path_pub()
+        path_pub()
     except rospy.ROSInterruptException:
         pass
