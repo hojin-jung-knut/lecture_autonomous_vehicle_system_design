@@ -6,6 +6,7 @@ import numpy as np
 from nav_msgs.msg import Odometry, Path
 from math import cos, sin, sqrt
 from geometry_msgs.msg import Point
+from morai_msgs.msg import EgoVehicleStatus
 from tf.transformations import euler_from_quaternion
 
 class DataLogger:
@@ -13,22 +14,23 @@ class DataLogger:
         rospy.init_node('data_logger', anonymous=True)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         rospy.Subscriber("/local_path", Path, self.path_callback)
-        self.is_path = self.is_odom = False
-        self.forward_point = self.pose = Point()
+        rospy.Subscriber("/Ego_topic", EgoVehicleStatus, self.status_callback)
+        self.is_look_forward_point = self.is_path = self.is_odom = self.is_status = False
+        self.forward_point, self.pose = Point(), Point()
         self.log_start_time = time.time()
         rospack = rospkg.RosPack()
         pkg_path = rospack.get_path(pkg_name)
         self.log_file_path = os.path.join(pkg_path, f"{path_name}.csv")
         self.csv_file = open(self.log_file_path, mode='w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['time', 'pos_x', 'pos_xd', 'pos_y', 'pos_yd'])
+        self.csv_writer.writerow(['time', 'x', 'xd', 'y', 'yd', 'vx(km/h)', 'wheel_angle(deg)', 'accel', 'brake'])
         self.last_pose_x, self.last_pose_y = 0.0, 0.0
         self.lfd = 20.0 # Look-ahead distance
 
     def main(self):
         rate = rospy.Rate(30)
         while not rospy.is_shutdown():
-            if self.is_odom and self.is_path:
+            if self.is_odom and self.is_path and self.is_status:
                 self.forward_path()
             else:
                 rospy.loginfo("Waiting for odometry and path data...")
@@ -38,7 +40,6 @@ class DataLogger:
         translation = [self.pose.x, self.pose.y]
         transformation_matrix = self.get_transformation_matrix(translation)
         inv_transformation_matrix = np.linalg.inv(transformation_matrix)
-
         self.is_look_forward_point = False
         for pose in self.path.poses:
             local_path_point = self.transform_point(inv_transformation_matrix, pose.pose.position)
@@ -73,12 +74,16 @@ class DataLogger:
         _, _, self.vehicle_yaw = euler_from_quaternion(odom_quaternion)
         if self.is_look_forward_point and (self.last_pose_x - self.pose.x)**2 + (self.last_pose_y - self.pose.y)**2 > 1:
             # print(f"x: {self.pose.x:.2f}, y: {self.pose.y:.2f}")
-            log = np.around([time.time() - self.log_start_time, self.pose.x,
-                             self.forward_point.x, self.pose.y, self.forward_point.y], 4)
+            log = np.around([time.time() - self.log_start_time, self.pose.x, self.forward_point.x, self.pose.y, 
+                             self.forward_point.y, self.ego.velocity.x*3.6, self.ego.wheel_angle, self.ego.accel, self.ego.brake], 4)
             self.csv_writer.writerow(log)
             self.last_log_time = time.time()
             self.last_pose_x = self.pose.x
             self.last_pose_y = self.pose.y
+
+    def status_callback(self, msg):
+        self.is_status = True
+        self.ego = msg
 
     def stop(self):
         print("Logging finished")
