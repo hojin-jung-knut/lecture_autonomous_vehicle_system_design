@@ -6,10 +6,10 @@ from math import sqrt
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 
-class path_pub:
+class PubPath:
     def __init__(self):
-        rospy.init_node('path_pub', anonymous=True)
-        rospy.Subscriber("odom", Odometry, self.odom_callback)
+        rospy.init_node('pub_path', anonymous=True)
+        rospy.Subscriber("/odom", Odometry, self.odom_callback)
         self.global_path_pub = rospy.Publisher('/global_path', Path, queue_size=1)
         self.local_path_pub = rospy.Publisher('/local_path', Path, queue_size=1)
 
@@ -18,7 +18,7 @@ class path_pub:
         self.current_block = 0
         self.k, self.k_init = 0, 0
         self.is_odom = False
-        self.is_loop = True
+        self.is_loop = False
         self.start_time = time.time()
 
         rospack = rospkg.RosPack()
@@ -38,7 +38,7 @@ class path_pub:
         self.global_path = self.full_global_path
         self.current_block = len(self.full_global_path)//30
 
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             if self.is_odom:
                 x, y = self.x, self.y
@@ -54,8 +54,8 @@ class path_pub:
                 if self.k_init < 1:
                     self.k = int(current_idx/len(self.full_global_path)*30)      
                     if self.k > 25:
-                        if self.is_loop:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:(self.k-25)*self.current_block]
+                        if self.is_loop == True:
+                            self.global_path = self.full_global_path[self.k*self.current_block:] + self.full_global_path[:(self.k-25)*self.current_block]
                         else:
                             self.global_path = self.full_global_path[self.k*self.current_block:]
                     else:
@@ -66,8 +66,8 @@ class path_pub:
                     self.k += 1
                     self.k %= 30
                     if self.k > 25:
-                        if self.is_loop:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]+self.full_global_path[:(self.k-25)*self.current_block]
+                        if self.is_loop == True:
+                            self.global_path = self.full_global_path[self.k*self.current_block:] + self.full_global_path[:(self.k-25)*self.current_block]
                         else:
                             self.global_path = self.full_global_path[self.k*self.current_block:]
                     else:
@@ -104,6 +104,6 @@ class path_pub:
 
 if __name__ == '__main__':
     try:
-        path_pub()
+        PubPath()
     except rospy.ROSInterruptException:
         pass
