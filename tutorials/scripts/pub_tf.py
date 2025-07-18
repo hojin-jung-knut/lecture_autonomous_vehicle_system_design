@@ -4,9 +4,9 @@
 import rospy, tf
 from nav_msgs.msg import Odometry
 
-class EgoListener:
+class PubTF:
     def __init__(self):
-        rospy.init_node('status_listener', anonymous=True)
+        rospy.init_node('pub_tf', anonymous=True)
         rospy.Subscriber("/odom", Odometry, self.callback)
         self.is_odom = False
         rospy.spin()
@@ -28,6 +28,6 @@ class EgoListener:
 
 if __name__ == '__main__':
     try:
-        EgoListener()
+        PubTF()
     except rospy.ROSInterruptException:
         pass
