@@ -3,7 +3,7 @@ roslaunch rosbridge_server rosbridge_websocket.launch
 roslaunch velodyne_pointcloud VLP16_points.launch
 
 ### ROS 기본 실행 명령어
-rosrun tutorials [python_file_name].py
+rosrun tutorials [python_file_name].py   
 roslaunch tutorials [launch_file_name].launch
 
 ### LINUX 기본 실행 명령어
