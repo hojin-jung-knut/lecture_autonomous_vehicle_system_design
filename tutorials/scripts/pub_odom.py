@@ -7,13 +7,13 @@ from morai_msgs.msg import GPSMessage
 from nav_msgs.msg import Odometry
 from pyproj import Proj
 
-class GPSIMUParser:
+class PubOdom:
     def __init__(self):
-        rospy.init_node('GPS_IMU_parser', anonymous=True)
+        rospy.init_node('Odeometer', anonymous=True)
         self.gps_sub = rospy.Subscriber("/gps", GPSMessage, self.navsat_callback)
         self.imu_sub = rospy.Subscriber("/imu", Imu, self.imu_callback)
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=1)
-        # 초기화
+        # initialization
         self.x, self.y = None, None
         self.is_imu = self.is_gps = False
 
@@ -26,17 +26,17 @@ class GPSIMUParser:
         rate = rospy.Rate(20)
         while not rospy.is_shutdown():
             os.system('clear')
-            if self.is_imu == True and self.is_gps == True:
+            if self.is_imu and self.is_gps:
                 self.convertLL2UTM()
                 self.odom_pub.publish(self.odom_msg)
                 print(f"odom_msg is now being published at '/odom' topic!\n")
-                print('-----------------[ odom_msg ]---------------------')
+                print('-----------------[ Odom_msg ]---------------------')
                 print(self.odom_msg.pose)
 
             if not self.is_imu:
-                print("[1] can't subscribe '/imu' topic... \n    please check your IMU sensor connection")
+                print("Missing '/imu' topic")
             if not self.is_gps:
-                print("[2] can't subscribe '/gps' topic... \n    please check your GPS sensor connection")
+                print("Missing '/gps' topic")
             
             self.is_gps = self.is_imu = False
             rate.sleep()
@@ -77,6 +77,6 @@ class GPSIMUParser:
 
 if __name__ == '__main__':
     try:
-        GPS_IMU_parser = GPSIMUParser()
+        PubOdom()
     except rospy.ROSInterruptException:
         pass
