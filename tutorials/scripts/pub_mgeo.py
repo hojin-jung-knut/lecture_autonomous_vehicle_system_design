@@ -6,9 +6,9 @@ from geometry_msgs.msg import Point32
 from sensor_msgs.msg import PointCloud
 from lib.mgeo.class_defs import MGeoPlannerMap
 
-class MGeoPublisher:
+class PubMGeo:
     def __init__(self):
-        rospy.init_node('mgeo_pub', anonymous=True)
+        rospy.init_node('pub_mgeo', anonymous=True)
 
         self.link_pub = rospy.Publisher('/link', PointCloud, queue_size=1)
         self.node_pub = rospy.Publisher('/node', PointCloud, queue_size=1)
@@ -29,14 +29,14 @@ class MGeoPublisher:
         self.nodes = mgeo_planner_map.node_set.nodes
         self.links = mgeo_planner_map.link_set.lines
 
-        self.link_msg = self.create_link_msg() # Create messages once
+        self.link_msg = self.create_link_msg()
         self.node_msg = self.create_node_msg()
 
         rate = rospy.Rate(1)
         while not rospy.is_shutdown():
             self.link_pub.publish(self.link_msg)
             self.node_pub.publish(self.node_msg)
-            rospy.loginfo_throttle(3, "MGeo data published.") # Inform every 3 seconds
+            rospy.loginfo_throttle(3, "MGeo data published.")
             rate.sleep()
 
     def create_link_msg(self):
@@ -60,7 +60,7 @@ class MGeoPublisher:
 
 if __name__ == '__main__':
     try:
-        mgeo_publisher = MGeoPublisher()
-        rospy.spin() # Keep the node running
+        PubMGeo()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
