@@ -3,8 +3,11 @@ roslaunch rosbridge_server rosbridge_websocket.launch
 roslaunch velodyne_pointcloud VLP16_points.launch
 
 ### ROS 기본 실행 명령어
-rosrun tutorials [python_file_name].py   
+rosrun tutorials [python_file_name].py
 roslaunch tutorials [launch_file_name].launch
+
+### LINUX 기본 실행 명령어
+sudo chmod +x *.py # 현재 directory 내 모든 python 파일 사용권한 부여
 
 ### Term Project I
 Map: R_KR_PG_C-track_outdoor(tutorials/path/c-track.txt)   
