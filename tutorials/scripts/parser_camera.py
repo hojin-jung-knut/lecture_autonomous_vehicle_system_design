@@ -6,7 +6,7 @@ from sensor_msgs.msg import CompressedImage
 
 class IMGParser:
     def __init__(self):
-        rospy.init_node('image_parser', anonymous=True)
+        rospy.init_node('camera_parser', anonymous=True)
         rospy.Subscriber("/image_jpeg/compressed", CompressedImage, self.callback)
         rospy.spin()
 
