@@ -12,19 +12,19 @@ class PubPath:
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         self.global_path_pub = rospy.Publisher('/global_path', Path, queue_size=1)
         self.local_path_pub = rospy.Publisher('/local_path', Path, queue_size=1)
-
-        self.full_global_path, self.global_path = [], []
-        self.local_path_size = 50
-        self.current_block = 0
-        self.k, self.k_init = 0, 0
         self.is_odom = False
         self.is_loop = False
         self.start_time = time.time()
 
+        full_global_path, global_path = [], []
+        local_path_size = 50
+        block = 0
+        k, k_init = 0, 0
+        current_idx_init = 0
         rospack = rospkg.RosPack()
         pkg_path = rospack.get_path('tutorials')
-        full_path = pkg_path + '/path/k-city.txt'
-        #full_path = pkg_path+'/path/c-track.txt'
+        #full_path = pkg_path + '/path/k-city.txt'
+        full_path = pkg_path+'/path/c-track.txt'
 
         with open(full_path, 'r') as f:
             for line in f.readlines():
@@ -34,44 +34,64 @@ class PubPath:
                 pose.pose.position.x = float(tmp[0])
                 pose.pose.position.y = float(tmp[1])
                 pose.pose.orientation.w = 1
-                self.full_global_path.append(pose)
-        self.global_path = self.full_global_path
-        self.current_block = len(self.full_global_path)//30
+                full_global_path.append(pose)
+        global_path = full_global_path
+        block = len(full_global_path)//30+1
 
-        rate = rospy.Rate(20)
+        rate = rospy.Rate(40)
         while not rospy.is_shutdown():
             if self.is_odom:
                 x, y = self.x, self.y
                 min_dis = float('inf')
                 current_idx = -1
-                for i, pose in enumerate(self.global_path):
+                for i, pose in enumerate(global_path):
                     dx = x - pose.pose.position.x
                     dy = y - pose.pose.position.y
                     dist = sqrt(dx**2 + dy**2)
                     if dist < min_dis:
                         min_dis = dist
                         current_idx = i
-                if self.k_init < 1:
-                    self.k = int(current_idx/len(self.full_global_path)*30)      
-                    if self.k > 25:
-                        if self.is_loop == True:
-                            self.global_path = self.full_global_path[self.k*self.current_block:] + self.full_global_path[:(self.k-25)*self.current_block]
+                if k_init < 1:
+                    k = current_idx//block 
+                    if k < 3:
+                        if self.is_loop:
+                            global_path = full_global_path[(27+k)*block:] + full_global_path[:(k+3)*block]
+                            current_idx_init = len(global_path)//2
                         else:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]
-                    else:
-                        self.global_path = self.full_global_path[self.k*self.current_block:(self.k+5)*self.current_block]
-                    current_idx -= self.k*self.current_block
-                    self.k_init = 1
-                if current_idx > self.current_block:                
-                    self.k += 1
-                    self.k %= 30
-                    if self.k > 25:
-                        if self.is_loop == True:
-                            self.global_path = self.full_global_path[self.k*self.current_block:] + self.full_global_path[:(self.k-25)*self.current_block]
+                            global_path = full_global_path[:(k+3)*block]
+                            current_idx_init = k*block
+                    elif k > 27:
+                        if self.is_loop:
+                            global_path = full_global_path[(k-3)*block:] + full_global_path[:(k-27)*block]
+                            current_idx_init = len(global_path)//2
                         else:
-                            self.global_path = self.full_global_path[self.k*self.current_block:]
+                            global_path = full_global_path[(k-3)*block:]
+                            current_idx_init = 3*block
                     else:
-                        self.global_path = self.full_global_path[self.k*self.current_block:(self.k+5)*self.current_block]
+                        global_path = full_global_path[(k-3)*block:(k+3)*block]
+                        current_idx_init = len(global_path)//2
+                    k_init = 1
+                print(f"k: {k}, current_idx: {current_idx}, current_idx_init: {current_idx_init}")
+                if (current_idx - current_idx_init) > block:
+                    k += 1
+                    k %= 30
+                    if k < 3:
+                        if self.is_loop:
+                            global_path = full_global_path[(27+k)*block:] + full_global_path[:(k+3)*block]
+                            current_idx_init = len(global_path)//2
+                        else:
+                            global_path = full_global_path[:(k+3)*block]
+                            current_idx_init = k*block
+                    elif k > 27:
+                        if self.is_loop:
+                            global_path = full_global_path[(k-3)*block:] + full_global_path[:(k-27)*block]
+                            current_idx_init = len(global_path)//2
+                        else:
+                            global_path = full_global_path[(k-3)*block:]
+                            current_idx_init = 3*block
+                    else:
+                        global_path = full_global_path[(k-3)*block:(k+3)*block]
+                        current_idx_init = len(global_path)//2
                     continue
                 if current_idx == -1:
                     rospy.logwarn("Failed to find nearest waypoint.")
@@ -81,19 +101,17 @@ class PubPath:
                 # Global path
                 global_path_msg = Path()
                 global_path_msg.header.frame_id = 'map'
-                global_path_msg.poses = self.global_path
+                global_path_msg.poses = global_path
 
                 # Local path
-                local_end = min(len(self.global_path), current_idx + self.local_path_size)
+                local_end = min(len(global_path), current_idx + local_path_size)
                 local_path_msg = Path()
                 local_path_msg.header.frame_id = 'map'
-                local_path_msg.poses = self.global_path[current_idx:local_end]
+                local_path_msg.poses = global_path[current_idx:local_end]
 
                 #if time.time() - self.start_time < 5:
                 self.global_path_pub.publish(global_path_msg)
                 self.local_path_pub.publish(local_path_msg)
-
-                rospy.loginfo(f"Current Position x: {x:.2f}, y: {y:.2f}")
 
             rate.sleep()
 
