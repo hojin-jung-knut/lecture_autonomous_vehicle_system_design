@@ -23,7 +23,7 @@ class PubPath:
         current_idx_init = 0
         rospack = rospkg.RosPack()
         pkg_path = rospack.get_path('tutorials')
-        #full_path = pkg_path + '/path/k-city.txt'
+        # full_path = pkg_path + '/path/k-city.txt'
         full_path = pkg_path+'/path/c-track.txt'
 
         with open(full_path, 'r') as f:
