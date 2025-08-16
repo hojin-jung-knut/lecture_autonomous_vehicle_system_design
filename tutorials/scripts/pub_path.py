@@ -17,7 +17,7 @@ class PubPath:
         self.start_time = time.time()
 
         full_global_path, global_path = [], []
-        local_path_size = 50
+        local_path_size = 100
         block = 0
         k, k_init = 0, 0
         current_idx_init = 0
@@ -31,8 +31,7 @@ class PubPath:
                 tmp = line.strip().split()
                 pose = PoseStamped()
                 pose.header.frame_id = 'map'
-                pose.pose.position.x = float(tmp[0])
-                pose.pose.position.y = float(tmp[1])
+                pose.pose.position.x, pose.pose.position.y = float(tmp[0]), float(tmp[1])
                 pose.pose.orientation.w = 1
                 full_global_path.append(pose)
         global_path = full_global_path
@@ -45,8 +44,7 @@ class PubPath:
                 min_dis = float('inf')
                 current_idx = -1
                 for i, pose in enumerate(global_path):
-                    dx = x - pose.pose.position.x
-                    dy = y - pose.pose.position.y
+                    dx, dy = x - pose.pose.position.x, y - pose.pose.position.y
                     dist = sqrt(dx**2 + dy**2)
                     if dist < min_dis:
                         min_dis = dist
@@ -71,7 +69,6 @@ class PubPath:
                         global_path = full_global_path[(k-3)*block:(k+3)*block]
                         current_idx_init = len(global_path)//2
                     k_init = 1
-                print(f"k: {k}, current_idx: {current_idx}, current_idx_init: {current_idx_init}")
                 if (current_idx - current_idx_init) > block:
                     k += 1
                     k %= 30
@@ -101,7 +98,7 @@ class PubPath:
                 # Global path
                 global_path_msg = Path()
                 global_path_msg.header.frame_id = 'map'
-                global_path_msg.poses = global_path
+                global_path_msg.poses = full_global_path
 
                 # Local path
                 local_end = min(len(global_path), current_idx + local_path_size)
@@ -116,9 +113,8 @@ class PubPath:
             rate.sleep()
 
     def odom_callback(self, msg):
+        self.x, self.y = msg.pose.pose.position.x, msg.pose.pose.position.y
         self.is_odom = True
-        self.x = msg.pose.pose.position.x
-        self.y = msg.pose.pose.position.y
 
 if __name__ == '__main__':
     try:
