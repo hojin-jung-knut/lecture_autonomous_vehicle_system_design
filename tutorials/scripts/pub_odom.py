@@ -29,14 +29,14 @@ class PubOdom:
             if self.is_imu and self.is_gps:
                 self.convertLL2UTM()
                 self.odom_pub.publish(self.odom_msg)
-                print(f"odom_msg is now being published at '/odom' topic!\n")
-                print('-----------------[ Odom_msg ]---------------------')
-                print(self.odom_msg.pose)
+                rospy.loginfo(f"odom_msg is now being published at '/odom' topic!\n")
+                rospy.loginfo('-----------------[ Odom_msg ]---------------------')
+                rospy.loginfo(self.odom_msg.pose)
 
             if not self.is_imu:
-                print("Missing '/imu' topic")
+                rospy.loginfo("Missing '/imu' topic")
             if not self.is_gps:
-                print("Missing '/gps' topic")
+                rospy.loginfo("Missing '/gps' topic")
             
             self.is_gps = self.is_imu = False
             rate.sleep()
